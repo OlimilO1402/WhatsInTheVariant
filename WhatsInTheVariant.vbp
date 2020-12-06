@@ -1,6 +1,6 @@
 Type=Exe
-Reference=*\G{00020430-0000-0000-C000-000000000046}#2.0#0#..\..\Windows\SysWOW64\stdole2.tlb#OLE Automation
-Reference=*\G{A78AE71A-C976-48DB-9999-65E858F7A371}#1.0#0#..\..\Users\olimi\OneDrive\Documents\VB\IRecordInfo_OnTheFly\IRecordInfoVB.tlb#VBIRecordInfo
+Reference=*\G{00020430-0000-0000-C000-000000000046}#2.0#0#C:\Windows\SysWOW64\stdole2.tlb#OLE Automation
+Reference=*\G{A78AE71A-C976-48DB-9999-65E858F7A371}#1.0#0#C:\Users\olimi\OneDrive\Documents\VB\IRecordInfo_OnTheFly\IRecordInfoVB.tlb#VBIRecordInfo
 Object={BEC61919-E6C4-11D1-BE7D-C63815000000}#1.0#0; FLEXWIZ.OCX
 Form=Forms\Form1.frm
 Module=MEVT; Modules\MEVT.bas
