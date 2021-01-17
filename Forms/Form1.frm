@@ -27,13 +27,13 @@ Begin VB.Form Form1
       Width           =   1335
    End
    Begin VB.TextBox Text2 
-      Height          =   5055
+      Height          =   5175
       Left            =   3840
       MultiLine       =   -1  'True
       ScrollBars      =   3  'Beides
       TabIndex        =   15
       Top             =   840
-      Width           =   8895
+      Width           =   9015
    End
    Begin VB.PictureBox Picture1 
       Appearance      =   0  '2D
@@ -276,7 +276,7 @@ Attribute VB_Exposed = False
 Option Explicit
 'What's in the Variant?
 '======================
-'der Variant
+'the Variant
 Dim VarVal
 
 'Hilfsvariablen
@@ -297,6 +297,25 @@ Dim UdtVal As MSFlexGridWizard.GridSettingsType 'just as an example udt
 Dim ArrVal 'an arbitrary Array as Array as Array . . .
 Dim ClsVal As Dummy       ' serves as a typical user Class
 Dim ColVal As New Collection ' serves as a typical VBA Class
+
+Private Sub Form_Load()
+    InitData
+    
+    VarTypes_ToCombo Combo1
+    VarTypes_ToCombo Combo2, vbEmpty, vbNull
+    VarTypes_ToCombo Combo3, vbEmpty, vbNull
+    VarTypes_ToCombo Combo4, vbEmpty, vbNull
+    VarTypes_ToCombo Combo5, vbEmpty, vbNull
+    VarTypes_ToCombo Combo6, vbEmpty, vbNull, vbArray
+    
+    Combo2.Visible = False
+    Combo3.Visible = False
+    Combo4.Visible = False
+    Combo5.Visible = False
+    Combo6.Visible = False
+    Combo1.ListIndex = 14
+    
+End Sub
 
 
 Private Sub Command1_Click()
@@ -342,25 +361,6 @@ End Sub
 '    Set Picture2.Picture = LoadPic(App.Path & "\Resources\test3.png")
 'End Sub
 
-Private Sub Form_Load()
-    InitData
-    
-    VarTypes_ToCombo Combo1
-    VarTypes_ToCombo Combo2, vbEmpty, vbNull
-    VarTypes_ToCombo Combo3, vbEmpty, vbNull
-    VarTypes_ToCombo Combo4, vbEmpty, vbNull
-    VarTypes_ToCombo Combo5, vbEmpty, vbNull
-    VarTypes_ToCombo Combo6, vbEmpty, vbNull, vbArray
-    
-    Combo2.Visible = False
-    Combo3.Visible = False
-    Combo4.Visible = False
-    Combo5.Visible = False
-    Combo6.Visible = False
-    Combo1.ListIndex = 14
-    
-End Sub
-
 Private Sub InitData()
     BolVal = True
     StrVal = "Text"
@@ -399,7 +399,7 @@ Private Sub Form_Resize()
     If W > 0 And H > 0 Then
         PnlTextBox.Move 0, 0, W, H
         Text1.Move l, Text1.Top, IIf(mnuExpand.Checked, W - 2 * l, 3615), Text1.Height
-        Text2.Move Text2.Left, Text2.Top, W - Text2.Left - l, Me.ScaleHeight - l - Text2.Top
+        Text2.Move Text2.Left, Text2.Top, W - Text2.Left, Me.ScaleHeight - Text2.Top
     End If
 End Sub
 
