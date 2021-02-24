@@ -7,6 +7,7 @@ Module=MEVT; Modules\MEVT.bas
 Module=MUdt; Modules\MUdt.bas
 Module=MVariant; Modules\MVariant.bas
 Class=Dummy; Classes\Dummy.cls
+ResFile32="Resources\MyRes.res"
 Startup="Form1"
 HelpFile=""
 ExeName32="WhatsInTheVariant.exe"
