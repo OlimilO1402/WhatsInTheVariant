@@ -301,12 +301,12 @@ Dim ColVal As New Collection ' serves as a typical VBA Class
 Private Sub Form_Load()
     InitData
     
-    VarTypes_ToCombo Combo1
-    VarTypes_ToCombo Combo2, vbEmpty, vbNull
-    VarTypes_ToCombo Combo3, vbEmpty, vbNull
-    VarTypes_ToCombo Combo4, vbEmpty, vbNull
-    VarTypes_ToCombo Combo5, vbEmpty, vbNull
-    VarTypes_ToCombo Combo6, vbEmpty, vbNull, vbArray
+    EVbVarTypes_ToCombo Combo1
+    EVbVarTypes_ToCombo Combo2, vbEmpty, vbNull
+    EVbVarTypes_ToCombo Combo3, vbEmpty, vbNull
+    EVbVarTypes_ToCombo Combo4, vbEmpty, vbNull
+    EVbVarTypes_ToCombo Combo5, vbEmpty, vbNull
+    EVbVarTypes_ToCombo Combo6, vbEmpty, vbNull, vbArray
     
     Combo2.Visible = False
     Combo3.Visible = False
@@ -323,11 +323,11 @@ Private Sub Command1_Click()
     v1 = CByte(123) 'CSByte("123")
     v2 = CByte(23) 'CSByte("-23")
     
-    MsgBox EVarType_ToStr(VarType(v1))
+    MsgBox EVbVarType_ToStr(VarType(v1))
     
     Dim v: v = VAdd(v1, v2)
     
-    MsgBox EVarType_ToStr(VarType(v))
+    MsgBox EVbVarType_ToStr(VarType(v))
     
     'leider kann man nicht damit Rechnen, zum Rechnen muss man erst wieder in einen von VB unterstützten Typ umwandeln
     'geht nicht
@@ -338,7 +338,7 @@ Private Sub Command1_Click()
     sb = CByte(sb)
     sb = sb + CByte(1)
     
-    MsgBox EVarType_ToStr(VarType(sb))
+    MsgBox EVbVarType_ToStr(VarType(sb))
     
 End Sub
 
@@ -538,7 +538,7 @@ Try: On Error GoTo Catch
     TextAdd s
     Exit Sub
 Catch:
-    ErrHandler Me, "BtnCreate", EVarType_ToStr(vt) & " = " & Text1.Text
+    ErrHandler Me, "BtnCreate", EVbVarType_ToStr(vt) & " = " & Text1.Text
 End Sub
 
 Sub GetValue(ByVal vt As EVbVarType, ByRef v_out, s As String)
