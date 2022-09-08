@@ -70,37 +70,6 @@ Public Sub TUdtVar_Zero(var As TUdtVar)
     RtlZeroMemory var, 16
 End Sub
 
-Public Function VarType2_ToStr(var) As String
-    'On Error Resume Next
-    Dim vt As VbVarType: vt = VVarType(var)
-    Dim s As String
-    If vt And vbByRef Then
-        s = s & EVbVarType_ToStr(vt)
-        vt = vt - vbByRef
-    End If
-    If vt And vbVector Then
-        s = s & EVbVarType_ToStr(vt)
-        vt = vt - vbVector
-    End If
-    If vt And vbArray Then
-        s = s & EVbVarType_ToStr(vt)
-        vt = vt - vbArray
-        s = s & " As " & EVbVarType_ToStr(vt)
-        If vt = vbVariant Then
-            s = s & "(" & VarType2_ToStr(var(LBound(var))) & ")"
-        'ElseIf vt = vbObject Then
-        '    s = s & "(As " & TypeName(var(LBound(var))) & ")"
-        End If
-    Else
-        s = s & EVbVarType_ToStr(vt)
-        If vt = vbObject Or vt = vbUserDefinedType Or vt = vbDataObject Then
-            s = s & "(As " & TypeName(var) & ")"
-        End If
-    End If
-    VarType2_ToStr = s
-    'On Error GoTo 0
-End Function
-
 Function VarValue_ToStr(aVar)
     Dim s As String
     Dim vt As EVbVarType: vt = VVarType(aVar)
