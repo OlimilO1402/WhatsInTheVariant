@@ -1,5 +1,12 @@
 Attribute VB_Name = "MVariant"
 Option Explicit
+
+#If Win64 Then
+    Public Const Variant_Size As Long = 24
+#Else
+    Public Const Variant_Size As Long = 16
+#End If
+
 'all Variant functions of Oleaut32.dll
 'https://docs.microsoft.com/en-us/windows/win32/api/oleauto/nf-oleauto-varabs
 'HRESULT VarAbs(LPVARIANT pvarIn, LPVARIANT pvarResult);

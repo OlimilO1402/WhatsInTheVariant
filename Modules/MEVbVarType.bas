@@ -35,6 +35,7 @@ Public Enum EVbVarType                      'Dec    Hex
     vbByte = VbVarType.vbByte               '   17  &H11&   VT_UI1      V,S,T ' * be a 1-byte unsigned integer.
     vbUInteger = 18                         '   18  &H12&   VT_UI2      V,S,T ' * be a 2-byte unsigned integer.
     vbULong = 19                            '   19  &H13&   VT_UI4      V,S,T ' * be a 4-byte unsigned integer.
+    'vbLongPtr = 20 'in VBA7+Win64
     vbLongLong = 20                         '   20  &H14&   VT_I8       V,S,T ' * be an 8-byte  signed integer.
     vbULongLong = 21                        '   21  &H15&   VT_UI8      V,S,T ' * be an 8-byte unsigned integer.
     vbInt = 22                              '   22  &H16&   VT_INT      V,S,T ' * be a 4-byte signed integer.
@@ -53,7 +54,7 @@ Public Enum EVbVarType                      'Dec    Hex
                                             '   34  &H22&
                                             '   35  &H23&
     vbUserDefinedType = VbVarType.vbUserDefinedType '36 &H24& VT_RECORD V,S    The type of the element or contained field MUST be a BRECORD (see section 2.2.28.2).
-    vbIntPtr = 37                           '   37  &H25&               T      The specified type MUST be either a 4-byte or an 8-byte signed integer. The size of the integer is platform specific and determines the system pointer size value, as specified in section 2.2.21.
+    vbIntPtr = 37                           '   37  &H25&               T      The specified type MUST be either a 4-byte or an 8-byte   signed integer. The size of the integer is platform specific and determines the system pointer size value, as specified in section 2.2.21.
     vbUIntPtr = 38                          '   38  &H26&               T      The specified type MUST be either a 4 byte or an 8 byte unsigned integer. The size of the integer is platform specific and determines the system pointer size value, as specified in section 2.2.21.
                                             '
     vbFileTime = 64                         '   64  &H40&   VT_FILETIME T
@@ -182,11 +183,11 @@ Sub EVbVarTypes_ToCombo(aCmb As ComboBox, ParamArray exclude())
     End With
 End Sub
 
-Function ArrayContains(Arr(), var) As Boolean
+Function ArrayContains(Arr(), Var) As Boolean
     Dim v
     For Each v In Arr
         If Not IsEmpty(v) And Not IsMissing(v) Then
-            If v = var Then ArrayContains = True: Exit Function
+            If v = Var Then ArrayContains = True: Exit Function
         End If
     Next
 End Function
@@ -243,9 +244,9 @@ Public Function EVbVarType_Parse(ByVal s As String) As EVbVarType
     EVbVarType_Parse = vt
 End Function
 
-Public Function VarType2_ToStr(var) As String
+Public Function VarType2_ToStr(Var) As String
     'On Error Resume Next
-    Dim vt As VbVarType: vt = VVarType(var)
+    Dim vt As VbVarType: vt = VVarType(Var)
     Dim s As String
     If vt And vbByRef Then
         s = s & EVbVarType_ToStr(vt)
@@ -260,14 +261,14 @@ Public Function VarType2_ToStr(var) As String
         vt = vt - vbArray
         s = s & " As " & EVbVarType_ToStr(vt)
         If vt = vbVariant Then
-            s = s & "(" & VarType2_ToStr(var(LBound(var))) & ")"
+            s = s & "(" & VarType2_ToStr(Var(LBound(Var))) & ")"
         'ElseIf vt = vbObject Then
         '    s = s & "(As " & TypeName(var(LBound(var))) & ")"
         End If
     Else
         s = s & EVbVarType_ToStr(vt)
         If vt = vbObject Or vt = vbUserDefinedType Or vt = vbDataObject Then
-            s = s & "(As " & TypeName(var) & ")"
+            s = s & "(As " & TypeName(Var) & ")"
         End If
     End If
     VarType2_ToStr = s

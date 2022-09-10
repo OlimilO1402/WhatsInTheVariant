@@ -8,7 +8,7 @@ Public Type TUdtVar
     res1 As Integer ' 2
     res2 As Long    ' 4
     pvData  As Long 'Pointer to the new udt on the heap
-    RecInfo As IRecordInfoVB
+    RecInfo As Variant ' 'As IRecordInfoVB
 End Type
 
 Public Declare Sub RtlMoveMemory Lib "kernel32" (ByRef Dst As Any, ByRef Src As Any, ByVal BytLen As Long)
