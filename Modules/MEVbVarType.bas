@@ -25,7 +25,7 @@ Public Enum EVbVarType                      'Dec    Hex
     vbDate = VbVarType.vbDate               '   7   &H7&    VT_DATE     V,S,T ' * be DATE (see section 2.2.25).
     vbString = VbVarType.vbString           '   8   &H8&    VT_BSTR     V,S,T ' * be BSTR (see section 2.2.23).
     vbObject = VbVarType.vbObject           '   9   &H9&    VT_DISPATCH V,S,T ' * be a pointer to IDispatch (see section 3.1.4).
-    vbError = VbVarType.vbError             '   10  &HA&    VT_ERROR    V,S,T ' * be HRESULT.
+    vbError = VbVarType.vbError             '   10  &HA&    VT_ERROR    V,S,T ' * be HRESULT.                                        'andalso IsMissing (Nicht vorhanden)
     vbBoolean = VbVarType.vbBoolean         '   11  &HB&    VT_BOOL     V,S,T ' * be VARIANT_BOOL (see section 2.2.27).
     vbVariant = VbVarType.vbVariant         '   12  &HC&    VT_VARIANT  V,S,T ' * be VARIANT (see section 2.2.29). It MUST appear with the bit flag VT_BYREF.
     vbDataObject = VbVarType.vbDataObject   '   13  &HD&    VT_UNKNOWN  V,S,T ' * be a pointer to IUnknown.
@@ -75,6 +75,13 @@ Public Enum EVbVarType                      'Dec    Hex
     vbReserved = &H8000&                    '32768  &H8000& VT_RESERVED
     vbIllegal = &HFFFF&                     '65535  &HFFFF& VT_ILLEGAL
 End Enum
+
+#If Win64 Then
+    Public Const SizeOf_Variant As Long = 24
+#Else
+    Public Const SizeOf_Variant As Long = 16
+#End If
+
 #If False Then
 Dim vbSByte: Dim vbUInteger: Dim vbULong: Dim vbLongLong: Dim vbULongLong: Dim vbInt: Dim vbUInt: Dim vbVoid: Dim vbHResult: Dim vbPtr: Dim vbSafeArray: Dim vbCArray: Dim vbUserdefined: Dim vbLPStr: Dim vbLPWStr: Dim vbWChar: Dim vbIntPtr
 Dim vbUIntPtr: Dim vbFileTime: Dim vbBlob: Dim vbStream: Dim vbStorage: Dim vbStreamedObject: Dim vbStoredObject: Dim vbBlobObject: Dim vbCF: Dim vbCLSID: Dim vbTypeMask: Dim vbIllegalMask: Dim vbVector: Dim vbByRef: Dim vbIllegal
@@ -148,15 +155,22 @@ Public Function EVbVarType_ToStr(ByVal vt As EVbVarType) As String
         If vt And vbVector Then
             If Len(s) Then s = s & " "
             s = s & "Vector"
+            vt = vt Xor EVbVarType.vbVector
+            s = s & " " & EVbVarType_ToStr(vt)
         End If
         If vt And vbArray Then
             If Len(s) Then s = s & " "
             s = s & "Array"
+            vt = vt Xor EVbVarType.vbArray
+            s = s & " " & EVbVarType_ToStr(vt)
         End If
         If vt And vbByRef Then
             If Len(s) Then s = s & " "
             s = s & "ByRef"
+            vt = vt Xor EVbVarType.vbByRef
+            s = s & " " & EVbVarType_ToStr(vt)
         End If
+        'hmm should we not remove array, vector or byref and go again?
     End Select
     EVbVarType_ToStr = s
 End Function
@@ -193,55 +207,141 @@ Function ArrayContains(Arr(), Var) As Boolean
 End Function
 
 Public Function EVbVarType_Parse(ByVal s As String) As EVbVarType
-    s = Trim(s)
+    s = LCase(Trim(s))
     If InStr(1, s, "=") Then s = Trim(Left(s, InStr(1, s, "=")))
-    If Left(s, 2) <> "vb" Then s = "vb" & s
+    'If Left(s, 2) <> "vb" And Left(s, 3) <> "vt_" Then
+    '    s = "vb" & s
+    'End If
     Dim vt As EVbVarType
-    Select Case LCase(s)
-    Case "vbempty":           vt = EVbVarType.vbEmpty           ' vbEmpty      = 0"
-    Case "vbnull":            vt = EVbVarType.vbNull            ' vbNull       = 1"
-    Case "vbinteger":         vt = EVbVarType.vbInteger         ' vbInteger    = 2"
-    Case "vblong":            vt = EVbVarType.vbLong            ' vbLong       = 3"
-    Case "vbsingle":          vt = EVbVarType.vbSingle          ' vbSingle     = 4"
-    Case "vbdouble":          vt = EVbVarType.vbDouble          ' vbDouble     = 5"
-    Case "vbcurrency":        vt = EVbVarType.vbCurrency        ' vbCurrency   = 6"
-    Case "vbdate":            vt = EVbVarType.vbDate            ' vbDate       = 7"
-    Case "vbstring":          vt = EVbVarType.vbString          ' vbString     = 8"
-    Case "vbobject":          vt = EVbVarType.vbObject          ' vbObject     = 9"
-    Case "vberror":           vt = EVbVarType.vbError           ' vbError      = 10"
-    Case "vbboolean":         vt = EVbVarType.vbBoolean         ' vbBoolean    = 11"
-    Case "vbvariant":         vt = EVbVarType.vbVariant         ' vbVariant    = 12"
-    Case "vbdataobject":      vt = EVbVarType.vbDataObject      ' vbDataObject = 13"
-    Case "vbdecimal":         vt = EVbVarType.vbDecimal         ' vbDecimal    = 14"
+    Select Case s
+    Case "empty", "vbempty", "vt_empty":                              vt = EVbVarType.vbEmpty                       ' vbEmpty      = 0"
+    Case "any", "null", "vbnull", "vt_null":                          vt = EVbVarType.vbNull            ' vbNull       = 1"
+    Case "int16", "integer", "vbinteger", "vt_i2":                    vt = EVbVarType.vbInteger         ' vbInteger    = 2"
+    Case "int32", "long", "vblong", "vt_i4":                          vt = EVbVarType.vbLong            ' vbLong       = 3"
+    Case "float32", "flt32", "float", "single", "vbsingle", "vt_r4":  vt = EVbVarType.vbSingle          ' vbSingle     = 4"
+    Case "float64", "flt64", "double", "vbdouble", "vt_r8":           vt = EVbVarType.vbDouble          ' vbDouble     = 5"
+    Case "currency", "vbcurrency", "vt_cy":                           vt = EVbVarType.vbCurrency        ' vbCurrency   = 6"
+    Case "date", "vbdate", "vt_date":                                 vt = EVbVarType.vbDate            ' vbDate       = 7"
+    Case "datetime", "vbdatetime", "vt_datetime":                     vt = EVbVarType.vbDate            ' vbDate       = 7"
+    Case "string", "vbstring", "vt_bstr":                             vt = EVbVarType.vbString          ' vbString     = 8"
+    Case "object", "vbobject", "vt_dispatch":                         vt = EVbVarType.vbObject          ' vbObject     = 9"
+    Case "error", "vberror", "vt_error":                              vt = EVbVarType.vbError           ' vbError      = 10"
+    Case "bool", "boolean", "vbboolean", "vt_bool":                   vt = EVbVarType.vbBoolean         ' vbBoolean    = 11"
+    Case "variant", "vbvariant", "vt_variant":                        vt = EVbVarType.vbVariant         ' vbVariant    = 12"
+    Case "dataobject", "vbdataobject":                                vt = EVbVarType.vbDataObject      ' vbDataObject = 13"
+    Case "decimal", "vbdecimal", "vt_decimal":                        vt = EVbVarType.vbDecimal         ' vbDecimal    = 14"
                                                                 '  15?
-    Case "vbsbyte":           vt = EVbVarType.vbSByte           '  16   ' &H10& '   VT_I1          = 0x0010,
-    Case "vbbyte":            vt = EVbVarType.vbByte            '  17   ' &H11& '   VT_UI1         = 0x0011,"
-    Case "vbuinteger":        vt = EVbVarType.vbUInteger        '  18   ' &H12& '   VT_UI2         = 0x0012,"
-    Case "vbulong":           vt = EVbVarType.vbULong           '  19   ' &H13& '   VT_UI4         = 0x0013,"
-    Case "vblonglong":        vt = EVbVarType.vbLongLong        '  20   ' &H14& '   VT_I8          = 0x0014,"
-    Case "vbulonglong":       vt = EVbVarType.vbULongLong       '  21   ' &H15& '   VT_UI8         = 0x0015,"
-    Case "vbint":             vt = EVbVarType.vbInt             '  22   ' &H16& '   VT_INT         = 0x0016,"
-    Case "vbuint":            vt = EVbVarType.vbUInt            '  23   ' &H17& '   VT_UINT        = 0x0017,"
-    Case "vbvoid":            vt = EVbVarType.vbVoid            '  24   ' &H18& '   VT_VOID        = 0x0018,"
-    Case "vbhresult":         vt = EVbVarType.vbHResult         '  25   ' &H19& '   VT_HRESULT     = 0x0019,"
-    Case "vbptr":             vt = EVbVarType.vbPtr             '  26   ' &H1A& '   VT_PTR         = 0x001A,"
-    Case "vbsafearray":       vt = EVbVarType.vbSafeArray       '  27   ' &H1B& '   VT_SAFEARRAY   = 0x001B,"
-    Case "vbcArray":          vt = EVbVarType.vbCArray          '  28   ' &H1C& '   VT_CARRAY      = 0x001C,"
-    Case "vbuserdefined":     vt = EVbVarType.vbUserdefined     '  29   ' &H1D& '   VT_USERDEFINED = 0x001D,"
-    Case "vblpstr":           vt = EVbVarType.vbLPStr           '  30   ' &H1E& '   VT_LPSTR       = 0x001E,"
-    Case "vblpwstr":          vt = EVbVarType.vbLPWStr          '  31   ' &H1F& '   VT_LPWSTR      = 0x001F,"
-    Case "vbwchar":           vt = EVbVarType.vbWChar           '  32   ' &H20&                               'selbst definiert, nicht offiziell"
+    Case "sint8", "sbyte", "vbsbyte", "vt_i1":                        vt = EVbVarType.vbSByte           '  16   ' &H10& '   VT_I1          = 0x0010,
+    Case "int8", "byte", "vbbyte", "vt_ui1":                          vt = EVbVarType.vbByte            '  17   ' &H11& '   VT_UI1         = 0x0011,"
+    Case "uint16", "uinteger", "vbuinteger", "vt_ui2":                vt = EVbVarType.vbUInteger        '  18   ' &H12& '   VT_UI2         = 0x0012,"
+    Case "uint32", "ulong", "vbulong", "vt_ui4":                      vt = EVbVarType.vbULong           '  19   ' &H13& '   VT_UI4         = 0x0013,"
+    Case "int64", "longlong", "vblonglong", "vt_i8":                  vt = EVbVarType.vbLongLong        '  20   ' &H14& '   VT_I8          = 0x0014,"
+    Case "uint64", "ulonglong", "vbulonglong", "vt_ui8":              vt = EVbVarType.vbULongLong       '  21   ' &H15& '   VT_UI8         = 0x0015,"
+    Case "int", "vbint", "vt_int":                                    vt = EVbVarType.vbInt             '  22   ' &H16& '   VT_INT         = 0x0016,"
+    Case "uint", "vbuint", "vt_uint":                                 vt = EVbVarType.vbUInt            '  23   ' &H17& '   VT_UINT        = 0x0017,"
+    Case "void", "vbvoid", "vt_void":                                 vt = EVbVarType.vbVoid            '  24   ' &H18& '   VT_VOID        = 0x0018,"
+    Case "hresult", "vbhresult", "vt_hresult":                        vt = EVbVarType.vbHResult         '  25   ' &H19& '   VT_HRESULT     = 0x0019,"
+    Case "ptr", "vbptr", "vt_ptr":                                    vt = EVbVarType.vbPtr             '  26   ' &H1A& '   VT_PTR         = 0x001A,"
+    Case "safearray", "vbsafearray", "vt_safearray":                  vt = EVbVarType.vbSafeArray       '  27   ' &H1B& '   VT_SAFEARRAY   = 0x001B,"
+    Case "carray", "vbcArray", "vt_carray":                           vt = EVbVarType.vbCArray          '  28   ' &H1C& '   VT_CARRAY      = 0x001C,"
+    Case "userdefined", "vbuserdefined", "vt_userdefined":            vt = EVbVarType.vbUserdefined                '  29   ' &H1D& '   VT_USERDEFINED = 0x001D,"
+    Case "lpstr", "vblpstr", "vt_lpstr":                              vt = EVbVarType.vbLPStr           '  30   ' &H1E& '   VT_LPSTR       = 0x001E,"
+    Case "lpwstr", "vblpwstr", "vt_lpwstr":                           vt = EVbVarType.vbLPWStr          '  31   ' &H1F& '   VT_LPWSTR      = 0x001F,"
+    Case "wchar", "vbwchar", "vt_wchar":                              vt = EVbVarType.vbWChar           '  32   ' &H20&                               'self defined inofficial"
                                                                 '  33   ' &H21& '
                                                                 '  34   ' &H22& '
                                                                 '  35   ' &H23& '
-    Case "vbuserdefinedtype": vt = EVbVarType.vbUserDefinedType '  36   ' &H24& '   VT_RECORD      = 0x0024,"
-    Case "vbintptr":          vt = EVbVarType.vbIntPtr          '  37   ' &H25& '   VT_INT_PTR     = 0x0025,"
-    Case "vbuintptr":         vt = EVbVarType.vbUIntPtr         '  38   ' &H26& '   VT_UINT_PTR    = 0x0026,"
-    Case "vbarray":           vt = EVbVarType.vbArray           '8192   '&H2000&'   VT_ARRAY       = 0x2000,"
-    Case "vbbyref":           vt = EVbVarType.vbByRef          '16384   '&H4000&'   VT_BYREF       = 0x4000
-    'Case Else:
+    Case "userdefinedtype", "vbuserdefinedtype":                      vt = EVbVarType.vbUserDefinedType '  36   ' &H24& '   VT_RECORD      = 0x0024,"
+    Case "intptr", "vbintptr", "vt_int_ptr":                          vt = EVbVarType.vbIntPtr          '  37   ' &H25& '   VT_INT_PTR     = 0x0025,"
+    Case "uintptr", "vbuintptr", "vt_uint_ptr":                       vt = EVbVarType.vbUIntPtr         '  38   ' &H26& '   VT_UINT_PTR    = 0x0026,"
+    
+    
+                                            '
+    Case "filetime", "vbfiletime", "vt_filetime":                     vt = EVbVarType.vbFileTime        '  64   ' &H40& '   VT_FILETIME T
+    Case "blob", "vbblob", "vt_blob":                                 vt = EVbVarType.vbBlob            '  65   ' &H41& '   VT_BLOB     T
+    Case "stream", "vbstream", "vt_stream":                           vt = EVbVarType.vbStream          '  66   ' &H42& '   VT_STREAM
+    Case "storage", "vbStorage", "vt_storage":                        vt = EVbVarType.vbStorage '= 67                          '   67  &H43&   VT_STORAGE
+    Case "streamedobject", "vbstreamedobject", "vt_streamed_object":  vt = EVbVarType.vbStreamedObject '= 68                   '   68  &H44&   VT_STREAMED_OBJECT
+    Case "storedobject", "vbstoredobject", "vt_stored_object":        vt = EVbVarType.vbStoredObject '= 69                     '   69  &H45&   VT_STORED_OBJECT
+    Case "blobobject", "vbblobobject", "vt_blob_object":              vt = EVbVarType.vbBlobObject '= 70                       '   70  &H46&   VT_BLOB_OBJECT
+    Case "clipboard", "vbcf", "vt_cf":                                vt = vbCF
+    Case "guid", "clsid", "vbclsid", "vt_clsid":                      vt = vbCLSID
+    Case "vector", "vbvector", "vt_vector":                           vt = EVbVarType.vbVector          '4096   '&H1000&'   VT_VECTOR      = 0x1000,"
+    Case "multivalue", "array", "vbarray", "vt_array":                vt = EVbVarType.vbArray           '8192   '&H2000&'   VT_ARRAY       = 0x2000,"
+    Case "byref", "vbbyref", "vt_byref":                              vt = EVbVarType.vbByRef          '16384   '&H4000&'   VT_BYREF       = 0x4000
+    Case "buffer":                                                    vt = EVbVarType.vbArray Or EVbVarType.vbByte
+    Case Else
+        Dim sa() As String: sa = Split(s, " ")
+        Dim i As Long, u As Long: u = UBound(sa)
+        If i = u Then
+            If s = sa(i) Then Exit Function
+            vt = vt Or EVbVarType_Parse(sa(i))
+        Else
+            If u >= 0 Then
+                For i = 0 To u
+                    If Len(sa(i)) Then
+                        vt = vt Or EVbVarType_Parse(sa(i))
+                    End If
+                Next
+            End If
+        End If
     End Select
     EVbVarType_Parse = vt
+    
+'https://learn.microsoft.com/en-us/windows/win32/api/wtypes/ne-wtypes-varenum
+'VARENUM
+'  VT_EMPTY = 0,
+'  VT_NULL = 1,
+'  VT_I2 = 2,
+'  VT_I4 = 3,
+'  VT_R4 = 4,
+'  VT_R8 = 5,
+'  VT_CY = 6,
+'  VT_DATE = 7,
+'  VT_BSTR = 8,
+'  VT_DISPATCH = 9,
+'  VT_ERROR = 10,
+'  VT_BOOL = 11,
+'  VT_VARIANT = 12,
+'  VT_UNKNOWN = 13,
+'  VT_DECIMAL = 14,
+'  VT_I1 = 16,
+'  VT_UI1 = 17,
+'  VT_UI2 = 18,
+'  VT_UI4 = 19,
+'  VT_I8 = 20,
+'  VT_UI8 = 21,
+'  VT_INT = 22,
+'  VT_UINT = 23,
+'  VT_VOID = 24,
+'  VT_HRESULT = 25,
+'  VT_PTR = 26,
+'  VT_SAFEARRAY = 27,
+'  VT_CARRAY = 28,
+'  VT_USERDEFINED = 29,
+'  VT_LPSTR = 30,
+'  VT_LPWSTR = 31,
+'  VT_RECORD = 36,
+'  VT_INT_PTR = 37,
+'  VT_UINT_PTR = 38,
+'  VT_FILETIME = 64,
+'  VT_BLOB = 65,
+'  VT_STREAM = 66,
+'  VT_STORAGE = 67,
+'  VT_STREAMED_OBJECT = 68,
+'  VT_STORED_OBJECT = 69,
+'  VT_BLOB_OBJECT = 70,
+'  VT_CF = 71,
+'  VT_CLSID = 72,
+'  VT_VERSIONED_STREAM = 73,
+'  VT_BSTR_BLOB = 0xfff,
+'  VT_VECTOR = 0x1000,
+'  VT_ARRAY = 0x2000,
+'  VT_BYREF = 0x4000,
+'  VT_RESERVED = 0x8000,
+'  VT_ILLEGAL = 0xffff,
+'  VT_ILLEGALMASKED = 0xfff,
+'  VT_TYPEMASK = 0xfff
 End Function
 
 Public Function VarType2_ToStr(Var) As String
