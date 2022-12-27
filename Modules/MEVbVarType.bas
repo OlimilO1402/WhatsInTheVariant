@@ -24,7 +24,7 @@ Public Enum EVbVarType                      'Dec    Hex
     vbCurrency = VbVarType.vbCurrency       '   6   &H6&    VT_CY       V,S,T ' * be CURRENCY (see section 2.2.24).
     vbDate = VbVarType.vbDate               '   7   &H7&    VT_DATE     V,S,T ' * be DATE (see section 2.2.25).
     vbString = VbVarType.vbString           '   8   &H8&    VT_BSTR     V,S,T ' * be BSTR (see section 2.2.23).
-    vbObject = VbVarType.vbObject           '   9   &H9&    VT_DISPATCH V,S,T ' * be a pointer to IDispatch (see section 3.1.4).
+    vbObject = VbVarType.vbObject           '   9   &H9&    VT_DISPATCH V,S,T ' * be a pointer to IDispatch (see section 3.1.4).  'IUnknown+IDispatch
     vbError = VbVarType.vbError             '   10  &HA&    VT_ERROR    V,S,T ' * be HRESULT.                                        'andalso IsMissing (Nicht vorhanden)
     vbBoolean = VbVarType.vbBoolean         '   11  &HB&    VT_BOOL     V,S,T ' * be VARIANT_BOOL (see section 2.2.27).
     vbVariant = VbVarType.vbVariant         '   12  &HC&    VT_VARIANT  V,S,T ' * be VARIANT (see section 2.2.29). It MUST appear with the bit flag VT_BYREF.
