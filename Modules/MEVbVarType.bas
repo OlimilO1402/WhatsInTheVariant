@@ -76,7 +76,7 @@ Public Enum EVbVarType                      'Dec    Hex
     vbIllegal = &HFFFF&                     '65535  &HFFFF& VT_ILLEGAL
 End Enum
 
-#If Win64 Then
+#If win64 Then
     Public Const SizeOf_Variant As Long = 24
 #Else
     Public Const SizeOf_Variant As Long = 16
@@ -119,8 +119,8 @@ Public Function EVbVarType_ToStr(ByVal vt As EVbVarType) As String
     Case vbULong:           s = "ULong"
     Case vbLongLong:        s = "LongLong"
     Case vbULongLong:       s = "ULongLong"
-    Case vbInt:             s = "Int "
-    Case vbUInt:            s = "UInt "
+    Case vbInt:             s = "Int"
+    Case vbUInt:            s = "UInt"
     Case vbVoid:            s = "Void"
     Case vbHResult:         s = "HResult"
     Case vbPtr:             s = "Ptr"
